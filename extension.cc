@@ -35,7 +35,6 @@ gf_element field_extension::embed(const gf_element &a) const {
     Fp_polynomial a_poly(a.polynomial_rep());
     bigmod_matrix a_vec(K.degree(), 1, p);
     for (int i = 0; i < K.degree(); i++)
-        // warning: inefficient, but i don't see a better way.
         a_vec.sto(i, 0, a_poly[i]);
     bigmod_matrix b_vec = embedding * a_vec; // or use copy?
     Fp_polynomial b_poly;
@@ -66,7 +65,6 @@ gf_element field_extension::restrict(const gf_element &b) const {
     Fp_polynomial b_poly(b.polynomial_rep());
     bigmod_matrix b_vec(L.degree(), 1, p);
     for (int i = 0; i < L.degree(); i++)
-        // warning: inefficient, but i don't see a better way.
         b_vec.sto(i, 0, b_poly[i]);
     bigmod_matrix a_vec = restriction * b_vec; // or use copy?
     Fp_polynomial a_poly;
@@ -115,22 +113,18 @@ ostream &operator<<(ostream &out, const field_extension &ext) {
     out << ext.embedding.get_no_of_columns() << " ";
     out << ext.embedding.get_modulus();
 
-    for (int i = 0; i < ext.embedding.get_no_of_rows(); i++) {
-        for (int j = 0; j < ext.embedding.get_no_of_columns(); j++) {
+    for (int i = 0; i < ext.embedding.get_no_of_rows(); i++)
+        for (int j = 0; j < ext.embedding.get_no_of_columns(); j++)
             out << " " << ext.embedding[i][j];
-        }
-    }
     out << endl;
 
     out << ext.restriction.get_no_of_rows() << " ";
     out << ext.restriction.get_no_of_columns() << " ";
     out << ext.restriction.get_modulus();
 
-    for (int i = 0; i < ext.restriction.get_no_of_rows(); i++) {
-        for (int j = 0; j < ext.restriction.get_no_of_columns(); j++) {
+    for (int i = 0; i < ext.restriction.get_no_of_rows(); i++)
+        for (int j = 0; j < ext.restriction.get_no_of_columns(); j++)
             out << " " << ext.restriction[i][j];
-        }
-    }
     // no endl
     return out;
 }
