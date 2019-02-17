@@ -43,7 +43,7 @@ There are more changes that I can't recall; I will try to add these as time goes
 
 ## Building and Usage Instructions
 
-First, build and install the `f_q_support` branch of [my fork of LiDIA](https://github.com/benediamond/LiDIA/tree/f_q_support). Also install [crypto++](https://www.cryptopp.com/).
+First, build and install the [`f_q_support` branch](https://github.com/benediamond/LiDIA/tree/f_q_support) of my fork of LiDIA. Also install [Crypto++](https://www.cryptopp.com/).
 
 Once you've done this, GPS can be built using something like:
 ```bash
