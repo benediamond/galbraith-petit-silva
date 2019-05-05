@@ -109,8 +109,7 @@ ostream &operator<<(ostream &out, const field_extension &ext) {
     out << ext.K << endl;
     out << ext.L << endl;
 
-    out << ext.embedding.get_no_of_rows() << " ";
-    out << ext.embedding.get_no_of_columns() << " ";
+    out << ext.embedding.get_no_of_rows() << " " << ext.embedding.get_no_of_columns() << " ";
     out << ext.embedding.get_modulus();
 
     for (int i = 0; i < ext.embedding.get_no_of_rows(); i++)
@@ -118,8 +117,7 @@ ostream &operator<<(ostream &out, const field_extension &ext) {
             out << " " << ext.embedding[i][j];
     out << endl;
 
-    out << ext.restriction.get_no_of_rows() << " ";
-    out << ext.restriction.get_no_of_columns() << " ";
+    out << ext.restriction.get_no_of_rows() << " " << ext.restriction.get_no_of_columns() << " ";
     out << ext.restriction.get_modulus();
 
     for (int i = 0; i < ext.restriction.get_no_of_rows(); i++)

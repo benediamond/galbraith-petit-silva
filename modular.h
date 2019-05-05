@@ -17,20 +17,18 @@ class modular { // made to mimic the interface of meq_prime.
   public:
     modular(galois_field K) : K(K) { bigmod::set_modulus(K.characteristic()); }
 
-    polynomial<gf_element> build(bigint le, const gf_element &x) {
-        char le_str[le.bit_length() / 3 + 10];
-        bigint_to_string(le, le_str);
+    polynomial<gf_element> build(bigint l, const gf_element &x) {
+        char l_str[l.bit_length() / 3 + 10];
+        bigint_to_string(l, l_str);
         infile.close();
-        infile.open(string("modular/phi_j_") + le_str + string(".txt"));
+        infile.open(string("modular/phi_j_") + l_str + string(".txt"));
         infile.clear();
         infile.seekg(0, ios::beg);
 
         polynomial<gf_element> f(K);
-        rational_factorization le_fact(trialdiv(le));
+        rational_factorization l_fact(trialdiv(l));
         int deg;
-        bigint temp;
-        power(temp, le_fact.base(0), le_fact.exponent(0) - 1);
-        (le + temp).intify(deg);
+        (l + 1).intify(deg); // revert: no longer need l^e + l^{e - 1}
 
         f.set_degree(deg);
 

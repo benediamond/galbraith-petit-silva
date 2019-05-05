@@ -4,6 +4,7 @@
 #include <LiDIA/random_generator.h>
 #include <LiDIA/finite_fields/sf_gf_polynomial.h>
 #include <LiDIA/factorization.h>
+#include <LiDIA/gec_complex_multiplication.h>
 
 #include <vector>
 #include <array>
@@ -13,37 +14,19 @@
 
 #include "walker.h"
 #include "extension.h"
+#include "order.h"
+#include "basis.h"
 
 using namespace std;
 using namespace LiDIA;
-
-class torsion_basis {
-  public:
-    int l;
-    int le;
-
-    field_extension ext;              // contains K and L
-    elliptic_curve<gf_element> E_ext; // weirdly necessary when reading in points... revisit
-    array<point<gf_element>, 2> P;    // use the same name again...
-    // should any/all of these be references?
-
-    torsion_basis(const int l, const int le, const field_extension &ext,
-                  const elliptic_curve<gf_element> E_ext, const array<point<gf_element>, 2> &P)
-        : l(l), le(le), ext(ext), E_ext(E_ext), P(P) {}
-};
-
-istream &operator>>(istream &, torsion_basis &);
-ostream &operator<<(ostream &, const torsion_basis &);
-
-class walker;
 
 class gps : public eco_prime {
   private:
     int lambda;
     // not storing n!
-
     galois_field K;
-    gf_element iota;
+
+    maximal_order O_;
 
     bigint Z; // alternative name for B, taken by coeff
     array<vector<torsion_basis>, 2> P;
@@ -53,6 +36,8 @@ class gps : public eco_prime {
     gps(int, float);
 
     void gen_keypair();
+
+    // points on the base curve.
 
     vector<walker> keychain; // making this public... will have "sign" and "verify" methods...
 

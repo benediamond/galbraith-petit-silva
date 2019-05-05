@@ -14,17 +14,17 @@ using namespace LiDIA;
 using namespace std;
 
 int main(int argc, const char *argv[]) {
-    cout << "enter random seed...";
-    unsigned int a;
-    cin >> a;
-    random_generator::seed(a);
+    // cout << "enter random seed...";
+    // unsigned int a;
+    // cin >> a;
+    // random_generator::seed(a);
 
     // gps gps(4, 0.001);
-    // ofstream out("serializations/l = 4, p = 67967.txt");
+    // ofstream out("serializations/l = 4, lite.txt");
     // out << gps;
 
     gps gps;
-    ifstream in("serializations/l = 4, p = 67967.txt");
+    ifstream in("serializations/l = 4.txt");
     in >> gps;
 
     gps.gen_keypair();

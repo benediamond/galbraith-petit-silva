@@ -21,8 +21,9 @@ class field_extension {
     bigmod_matrix restriction;
 
   public: // warning: naive implementations!
-          // can do better: see e.g. De Feo Doliskani Schost
-          // https://dl.acm.org/citation.cfm?id=2465956
+    // can do better: see e.g. De Feo Doliskani Schost
+    // https://dl.acm.org/citation.cfm?id=2465956
+    field_extension() {}
     field_extension(const galois_field &K, const galois_field &L);
     gf_element embed(const gf_element &a) const;
     polynomial<gf_element> embed(const polynomial<gf_element> &a) const;
