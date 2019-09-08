@@ -43,11 +43,15 @@ There are more changes that I can't recall; I will try to add these as time goes
 
 First, build and install the [`f_q_support` branch](https://github.com/benediamond/LiDIA/tree/f_q_support) of my fork of LiDIA. Also install [Crypto++](https://www.cryptopp.com/).
 
-Once you've done this, GPS can be built using something like:
+To build GPS, navigate to the main repo directory and run
 ```bash
-g++ main.cc walker.cc gps.cc basis.cc step.cc order.cc extension.cc -isystem/usr/local/include -L/usr/local/lib -o main -lLiDIA -lgmp -lm -lcryptopp -std="c++11" -O2
+make
 ```
-An example of usage is given in the file `main.cc`, which imports a GPS object from a file, generates a keypair, and signs and verifies a message. Here is an example output:
+To execute it, run
+```bash
+./build/apps/main
+```
+The example usage given in `main.cc` imports a GPS object from a file, generates a keypair, and signs and verifies a message. Here is an example output:
 
 ```bash
 embedding: 

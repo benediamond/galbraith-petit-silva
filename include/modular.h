@@ -21,7 +21,9 @@ class modular { // made to mimic the interface of meq_prime.
         char l_str[l.bit_length() / 3 + 10];
         bigint_to_string(l, l_str);
         infile.close();
-        infile.open(string("modular/phi_j_") + l_str + string(".txt"));
+
+        infile.open(string("../src/modular/phi_j_") + l_str + string(".txt"));
+        // todo: exception if reading fails! will give cryptic error msg.
         infile.clear();
         infile.seekg(0, ios::beg);
 
