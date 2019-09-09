@@ -1,6 +1,6 @@
 # GPSPostQuantum
 
-This repository implements the [Galbraith--Petit--Silva](https://eprint.iacr.org/2016/1154.pdf) quantum-resistant cryptosystem, introduced in ASIACRYPT 2017. It uses as a dependency the number-theory library LiDIA, in [a fork of which](https://github.com/benediamond/LiDIA/tree/f_q_support) I have added extended support for point-counting-related operations on curves over prime-power-order fields. As far as I know, it is the first implementation of this theoretically compelling post-quantum cryptosystem.
+This repository implements the [Galbraith--Petit--Silva](https://eprint.iacr.org/2016/1154.pdf) quantum-resistant cryptosystem, introduced in ASIACRYPT 2017. It uses as a dependency the number-theory library LiDIA, in [a fork of which](https://github.com/benediamond/LiDIA) I have added extended support for point-counting-related operations on curves over prime-power-order fields. As far as I know, it is the first implementation of this theoretically compelling post-quantum cryptosystem.
 
 This is still a proof-of-concept, and not suitable (or practical, yet) for actual cryptographic use.
 
@@ -41,7 +41,7 @@ There are more changes that I can't recall; I will try to add these as time goes
 
 ## Building and Usage Instructions
 
-First, build and install the [`f_q_support` branch](https://github.com/benediamond/LiDIA/tree/f_q_support) of my fork of LiDIA. Also install [Crypto++](https://www.cryptopp.com/).
+First, build and install [my fork of LiDIA](https://github.com/benediamond/LiDIA). Also install [Crypto++](https://www.cryptopp.com/).
 
 To build GPS, navigate to the main repo directory and run
 ```bash
