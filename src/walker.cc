@@ -122,160 +122,147 @@ void walker::reroute() {
             multiply(S[1], S[1], P[k][i].l);
     }
 
-    int tries = 1000; // todo: set this more intelligently.
-    while (true) {
-        bigint n(I_.det()), m, temp; // silly.
-        n.abs();
-        sqrt(n, n);
-        ceil(m, (log(bigfloat(O_.p))));
+    bigint n(I_.det()), m, temp; // silly.
+    n.abs();
+    sqrt(n, n);
+    ceil(m, (log(bigfloat(O_.p))));
 
-        bool success = true;
-        base_vector<bigint> del(4);
-        while (true) { // if no prime found, then problem...
-            for (int i = 0; i < 4; i++)
-                del[i].assign(randomize(2 * m) - m); // cleaner than exhaustive, and still fast
-            del = (I_ * bigint_matrix(del))(0);
-            bigint norm = O_.norm(del); // used to be the simple norm
-            if (jacobi(-O_.q, norm / n) == 1 && (norm / n).is_prime())
-                // so that x_0, y_0 can be found below
-                break;
-        }
-
-        bigint_matrix I_n = (O_.times(O_.conjugate(del)) * I_) / n;
-        // _not actually necessary_ for J = I' (see paper)!
-
-        temp.assign(I_n.det());
-        temp.abs();
-        sqrt(n, temp); // n will temporarily alias n(I_'). will be recovered later
-        while (true) {
-            for (int i = 0; i < 4; i++)
-                del[i].assign(randomize(m));
-            del = (I_n * bigint_matrix(del))(0); // reuse del, actually equals "alpha"...
-            bigint norm = O_.norm(del);
-            if (gcd(norm, temp) == n)
-                break;
-        }
-
-        galois_field mod_n(n, 1);
-        gf_element c(mod_n);
-        c.assign(-O_.q);
-        c.assign(sqrt(c));
-
-        galois_field mod_q(O_.q, 1);
-        gf_element k(mod_q);
-        k.assign(-del[2]);
-        divide(k, k, n);
-
-        // note: using the first row and first col. could fail if identically zero... unlikely
-        gf_element x_0(mod_n), y_0(mod_n);
-        x_0.assign(1 - O_.p);
-        divide(x_0, x_0, 2);
-        y_0.assign(1 + O_.p);
-        divide(y_0, y_0, 2 * c);
-        bigint x, y;
-        x.assign(x_0.lift_to_Z());
-        y.assign(y_0.lift_to_Z());
-        // x^2 + q * y^2 should == -p (mod n).
-
-        del[0] += del[0] % 2 == 0 ? 0 : n;
-        del[1] += del[1] % 2 == 0 ? 0 : n;
-        del[2] += k.lift_to_Z() * n; // ASSERT: should be divisible by q
-        // ^^^ replace delta with a fellow representative (mod N) which also lives in <1, i, j, k>.
-        // this is necessarily possible because N and | O_0 / <1, i, j, k> | (4 * q I think) are coprime.
-
-        base_vector<bigint> del_1ijk(4);
-        del_1ijk[0] = del[0] / 2;
-        del_1ijk[1] = del[0] / 2 + del[2] / O_.q;
-        del_1ijk[2] = del[1] / 2;
-        del_1ijk[3] = -del[1] / 2 - O_.c * del[2] / O_.q - del[3];
-        // re-express this element directly in terms of its coords w.r.t. <1, i, j, k>.
-
-        bigmod_matrix del_mat(1, 2, n); // embedding into in M_2(Z / NZ)
-        del_mat.sto(0, 0, del_1ijk[0] + x * del_1ijk[2] + O_.q * y * del_1ijk[3]);
-        del_mat.sto(0, 1, del_1ijk[1] + y * del_1ijk[2] - x * del_1ijk[3]);
-        // finally, embed del into M_2(Z / NZ) using the matrix on your page...
-
-        sqrt(m, n * S[0] / (2 * O_.p * O_.q)); // this is rather conservative.
-        // will work, but could fail to find _anything_ if S[0] isn't big enough.
-        // could make things tighter, but could be a pain. revisit
-        base_vector<bigint> b_1(4), b_temp(4), b_2_temp(2);
-        for (int i = 0; i <= tries; i++) {
-            if (i == tries) {
-                success = false;
-                break; // same as continue
-            }
-            b_temp[2].assign(randomize(2 * m) - m);
-            b_temp[3].assign(randomize(2 * m) - m);
-            temp.assign(n * S[0] - O_.p * (b_temp[2] * b_temp[2] + O_.q * b_temp[3] * b_temp[3]));
-            if (!temp.is_prime())
-                continue;
-            if (cornacchia(b_temp[0], b_temp[1], -4 * O_.q, temp)) {
-                divide(b_temp[0], b_temp[0], 2); // because of LiDIA cornacchia
-                bigmod_matrix b_1_mat(2, 2, n);
-                array<bigint, 2> b_1_arr{b_temp[0] + x * b_temp[2] + O_.q * y * b_temp[3],
-                                         b_temp[1] + y * b_temp[2] - x * b_temp[3]};
-                b_1_mat.sto(0, 0, b_1_arr[0] * x + b_1_arr[1] * O_.q * y);
-                b_1_mat.sto(0, 1, b_1_arr[0] * y - b_1_arr[1] * x);
-                b_1_mat.sto(1, 0, b_1_arr[0] * O_.q * y - b_1_arr[1] * O_.q * x);
-                b_1_mat.sto(1, 1, -b_1_arr[0] * x - b_1_arr[1] * O_.q * y);
-
-                b_2_temp.assign((del_mat * inv(b_1_mat, temp))[0]); // 0th row
-
-                if (jacobi(O_.p * (b_2_temp[0] * b_2_temp[0] + O_.q * b_2_temp[1] * b_2_temp[1]) *
-                               S[1],
-                           n) == 1) {
-                    b_1[0] = 2 * b_temp[0];
-                    b_1[1] = 2 * b_temp[2];
-                    b_1[2] = O_.q * (b_temp[1] - b_temp[0]);
-                    b_1[3] = O_.c * (b_temp[0] - b_temp[1]) - b_temp[2] - b_temp[3];
-                    break; // convert b_1 back into coordinates w.r.t. O_0, as opposed to 1 i j and k.
-                }
-            }
-        }
-        if (!success) // first cornacchia fail, try again
-            continue;
-
-        c.assign(S[1]);
-        temp.assign(O_.p * (b_2_temp[0] * b_2_temp[0] + O_.q * b_2_temp[1] * b_2_temp[1]));
-        divide(c, c, temp);
-        c.assign(sqrt(c));
-        bigint mu(c.lift_to_Z()); // name lambda already taken
-
-        temp.assign((S[1] - temp * mu * mu) / n);
-        base_vector<bigint> b_2(4);
-        for (int i = 0; i <= tries; i++) {
-            if (i == tries) {
-                success = false;
-                break; // same as continue
-            }
-            b_temp[2].randomize(n); // watch list. try to shrink the sizes of these!
-            c.assign(temp - 2 * mu * O_.p * b_2_temp[0] * b_temp[2]);
-            b_temp[3].assign((c / (2 * mu * O_.p * O_.q * b_2_temp[1])).lift_to_Z());
-            bigint store_0(mu * b_2_temp[0] + n * b_temp[2]);
-            bigint store_1(mu * b_2_temp[1] + n * b_temp[3]);
-            bigint store((S[1] - O_.p * (store_0 * store_0 + O_.q * store_1 * store_1)) / (n * n));
-            // big enough? if not we'll increase S[2] even further.
-            if (!store.is_prime())
-                continue;
-            if (cornacchia(b_temp[0], b_temp[1], -4 * O_.q, store)) {
-                divide(b_temp[0], b_temp[0], 2); // because of LiDIA cornacchia
-                multiply(b_temp[0], b_temp[0], n);
-                multiply(b_temp[1], b_temp[1], n);
-                add(b_temp[2], b_temp[2] * n, mu * b_2_temp[0]);
-                add(b_temp[3], b_temp[3] * n, mu * b_2_temp[1]);
-                b_2[0] = 2 * b_temp[0];
-                b_2[1] = 2 * b_temp[2];
-                b_2[2] = O_.q * (b_temp[1] - b_temp[0]);
-                b_2[3] = O_.c * (b_temp[0] - b_temp[1]) - b_temp[2] - b_temp[3];
-                break;
-            }
-        }
-        if (!success) // second cornacchia fail, try again
-            continue;
-
-        I_ = (O_.times(O_.conjugate((O_.times(b_2) * bigint_matrix(b_1))(0))) * I_n) / n;
-        break;
+    bool success = true;
+    base_vector<bigint> del(4);
+    while (true) { // if no prime found, then problem...
+        for (int i = 0; i < 4; i++)
+            del[i].assign(randomize(2 * m) - m); // cleaner than exhaustive, and still fast
+        del = (I_ * bigint_matrix(del))(0);
+        bigint norm = O_.norm(del); // used to be the simple norm
+        if (jacobi(-O_.q, norm / n) == 1 && (norm / n).is_prime())
+            // so that x_0, y_0 can be found below
+            break;
     }
+
+    bigint_matrix I_n = (O_.times(O_.conjugate(del)) * I_) / n;
+    // _not actually necessary_ for J = I' (see paper)!
+
+    temp.assign(I_n.det());
+    temp.abs();
+    sqrt(n, temp); // n will temporarily alias n(I_'). will be recovered later
+    while (true) {
+        for (int i = 0; i < 4; i++)
+            del[i].assign(randomize(m));
+        del = (I_n * bigint_matrix(del))(0); // reuse del, actually equals "alpha"...
+        bigint norm = O_.norm(del);
+        if (gcd(norm, temp) == n)
+            break;
+    }
+
+    galois_field mod_n(n, 1);
+    gf_element c(mod_n);
+    c.assign(-O_.q);
+    c.assign(sqrt(c));
+
+    galois_field mod_q(O_.q, 1);
+    gf_element k(mod_q);
+    k.assign(-del[2]);
+    divide(k, k, n);
+
+    // note: using the first row and first col. could fail if identically zero... unlikely
+    gf_element x_0(mod_n), y_0(mod_n);
+    x_0.assign(1 - O_.p);
+    divide(x_0, x_0, 2);
+    y_0.assign(1 + O_.p);
+    divide(y_0, y_0, 2 * c);
+    bigint x, y;
+    x.assign(x_0.lift_to_Z());
+    y.assign(y_0.lift_to_Z());
+    // x^2 + q * y^2 should == -p (mod n).
+
+    del[0] += del[0] % 2 == 0 ? 0 : n;
+    del[1] += del[1] % 2 == 0 ? 0 : n;
+    del[2] += k.lift_to_Z() * n; // ASSERT: should be divisible by q
+    // ^^^ replace delta with a fellow representative (mod N) which also lives in <1, i, j, k>.
+    // this is necessarily possible because N and | O_0 / <1, i, j, k> | (4 * q I think) are coprime.
+
+    base_vector<bigint> del_1ijk(4);
+    del_1ijk[0] = del[0] / 2;
+    del_1ijk[1] = del[0] / 2 + del[2] / O_.q;
+    del_1ijk[2] = del[1] / 2;
+    del_1ijk[3] = -del[1] / 2 - O_.c * del[2] / O_.q - del[3];
+    // re-express this element directly in terms of its coords w.r.t. <1, i, j, k>.
+
+    bigmod_matrix del_mat(1, 2, n); // embedding into in M_2(Z / NZ)
+    del_mat.sto(0, 0, del_1ijk[0] + x * del_1ijk[2] + O_.q * y * del_1ijk[3]);
+    del_mat.sto(0, 1, del_1ijk[1] + y * del_1ijk[2] - x * del_1ijk[3]);
+    // finally, embed del into M_2(Z / NZ) using the matrix on your page...
+
+    base_vector<bigint> b_1(4), b_temp(4), b_2_temp(2);
+    while (true) { // first cornacchia
+        sqrt(m, n * S[0] / O_.p);
+        b_temp[2].assign(randomize(2 * m) - m);
+        sqrt(m, n * S[0] / (O_.p * O_.q));
+        b_temp[3].assign(randomize(2 * m) - m);
+        // we essentially want to sample a uniformly random point (x, y) from
+        // the ellipse p * x^2 + pq * y^2 <= N * S_0. i take a rejection sampling approach:
+        // by sampling from the rectangle [+- sqrt(NS / p)] * [+- sqrt(NS / pq)], then
+        // continuing whenever temp isn't prime (e.g., is negative!) we should find something
+        temp.assign(n * S[0] - O_.p * (b_temp[2] * b_temp[2] + O_.q * b_temp[3] * b_temp[3]));
+        if (!temp.is_prime())
+            continue;
+        if (cornacchia(b_temp[0], b_temp[1], -4 * O_.q, temp)) {
+            divide(b_temp[0], b_temp[0], 2); // because of LiDIA cornacchia
+            bigmod_matrix b_1_mat(2, 2, n);
+            array<bigint, 2> b_1_arr{b_temp[0] + x * b_temp[2] + O_.q * y * b_temp[3],
+                                     b_temp[1] + y * b_temp[2] - x * b_temp[3]};
+            b_1_mat.sto(0, 0, b_1_arr[0] * x + b_1_arr[1] * O_.q * y);
+            b_1_mat.sto(0, 1, b_1_arr[0] * y - b_1_arr[1] * x);
+            b_1_mat.sto(1, 0, b_1_arr[0] * O_.q * y - b_1_arr[1] * O_.q * x);
+            b_1_mat.sto(1, 1, -b_1_arr[0] * x - b_1_arr[1] * O_.q * y);
+
+            b_2_temp.assign((del_mat * inv(b_1_mat, temp))[0]); // 0th row
+
+            if (jacobi(O_.p * (b_2_temp[0] * b_2_temp[0] + O_.q * b_2_temp[1] * b_2_temp[1]) * S[1],
+                       n) == 1) {
+                b_1[0] = 2 * b_temp[0];
+                b_1[1] = 2 * b_temp[2];
+                b_1[2] = O_.q * (b_temp[1] - b_temp[0]);
+                b_1[3] = O_.c * (b_temp[0] - b_temp[1]) - b_temp[2] - b_temp[3];
+                break; // convert b_1 back into coordinates w.r.t. O_0, as opposed to 1 i j and k.
+            }
+        }
+    }
+
+    c.assign(S[1]);
+    temp.assign(O_.p * (b_2_temp[0] * b_2_temp[0] + O_.q * b_2_temp[1] * b_2_temp[1]));
+    divide(c, c, temp);
+    c.assign(sqrt(c));
+    bigint mu(c.lift_to_Z()); // name lambda already taken
+
+    temp.assign((S[1] - temp * mu * mu) / n);
+    base_vector<bigint> b_2(4);
+    while (true) {              // second cornacchia
+        b_temp[2].randomize(n); // watch list. try to shrink the sizes of these!
+        c.assign(temp - 2 * mu * O_.p * b_2_temp[0] * b_temp[2]);
+        b_temp[3].assign((c / (2 * mu * O_.p * O_.q * b_2_temp[1])).lift_to_Z());
+        bigint store_0(mu * b_2_temp[0] + n * b_temp[2]);
+        bigint store_1(mu * b_2_temp[1] + n * b_temp[3]);
+        bigint store((S[1] - O_.p * (store_0 * store_0 + O_.q * store_1 * store_1)) / (n * n));
+        // big enough? if not we'll increase S[2] even further.
+        if (!store.is_prime()) // hopefully won't fail forever!
+            continue;
+        if (cornacchia(b_temp[0], b_temp[1], -4 * O_.q, store)) {
+            divide(b_temp[0], b_temp[0], 2); // because of LiDIA cornacchia
+            multiply(b_temp[0], b_temp[0], n);
+            multiply(b_temp[1], b_temp[1], n);
+            add(b_temp[2], b_temp[2] * n, mu * b_2_temp[0]);
+            add(b_temp[3], b_temp[3] * n, mu * b_2_temp[1]);
+            b_2[0] = 2 * b_temp[0];
+            b_2[1] = 2 * b_temp[2];
+            b_2[2] = O_.q * (b_temp[1] - b_temp[0]);
+            b_2[3] = O_.c * (b_temp[0] - b_temp[1]) - b_temp[2] - b_temp[3];
+            break;
+        }
+    }
+
+    I_ = (O_.times(O_.conjugate((O_.times(b_2) * bigint_matrix(b_1))(0))) * I_n) / n;
+
     // ideal path has already been cleared, at end of previous loop...
     for (int k = 0; k < 2; k++) // key: using 3 here...
         for (int i = 0; i < P[k].size(); i++)

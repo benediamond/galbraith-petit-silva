@@ -7,7 +7,7 @@ gps::gps(int lambda, float epsilon) : lambda(lambda) { // purpose of epsilon?
     bigint p;
     power(p, bigint(2), 4 * lambda);
     do {
-        p = next_prime(p);
+        p = previous_prime(p);
     } while (p % 24 != 1);
     random_generator rg;
 
