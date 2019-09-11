@@ -1,6 +1,6 @@
 # GPSPostQuantum
 
-This repository implements the [Galbraith--Petit--Silva](https://eprint.iacr.org/2016/1154.pdf) quantum-resistant cryptosystem, introduced in ASIACRYPT 2017. It uses as a dependency the number-theory library LiDIA, in [a fork of which](https://github.com/benediamond/LiDIA) I have added extended support for point-counting-related operations on curves over prime-power-order fields. As far as I know, it is the first implementation of this theoretically compelling post-quantum cryptosystem.
+This repository implements the "Galbraith--Petit--Silva" quantum-resistant cryptosystem, [now published](https://link.springer.com/content/pdf/10.1007/s00145-019-09316-0.pdf) in the Journal of Cryptology. It uses as a dependency the number-theory library LiDIA, in [a fork of which](https://github.com/benediamond/LiDIA) I have added extended support for point-counting-related operations on curves over prime-power-order fields. As far as I know, it is the first implementation of this theoretically compelling post-quantum cryptosystem.
 
 This is still a proof-of-concept, and not suitable (or practical, yet) for actual cryptographic use.
 
