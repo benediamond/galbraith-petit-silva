@@ -1,5 +1,8 @@
 #include "basis.h"
 
+using namespace std;
+using namespace LiDIA;
+
 torsion_basis::torsion_basis(const int l, const field_extension &ext,
                              const elliptic_curve<gf_element> &E_ext,
                              const array<point<gf_element>, 2> &P)

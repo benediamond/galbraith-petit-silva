@@ -11,9 +11,6 @@
 #include "basis.h"
 #include "extension.h"
 
-using namespace std;
-using namespace LiDIA;
-
 class step {
     // int le; // degree of isogeny E_{i-1} -> E_i = ord(Q_i)
     // experimenting with storing extremely few shit in here...
@@ -22,35 +19,36 @@ class step {
 
     // nota bene... experimentally NOT storing this on-hand. revisit!
     // the below are defined over F_p^2!
-    polynomial<gf_element> psi; // division polynomial
-    polynomial<gf_element> phi;
-    polynomial<gf_element> omega; // omega(x, y) = omega(x) * y
+    LiDIA::polynomial<LiDIA::gf_element> psi; // division polynomial
+    LiDIA::polynomial<LiDIA::gf_element> phi;
+    LiDIA::polynomial<LiDIA::gf_element> omega; // omega(x, y) = omega(x) * y
 
   public:
-    elliptic_curve<gf_element> E_i;
-    bigint_matrix I_i;
+    LiDIA::elliptic_curve<LiDIA::gf_element> E_i;
+    LiDIA::bigint_matrix I_i;
 
     step() {}
-    step(const elliptic_curve<gf_element> &, const bigint_matrix &);
-    step(const torsion_basis &, const point<gf_element> &, const step &);
-    void isogeny(point<gf_element> &, const field_extension &) const;
+    step(const LiDIA::elliptic_curve<LiDIA::gf_element> &, const LiDIA::bigint_matrix &);
+    step(const torsion_basis &, const LiDIA::point<LiDIA::gf_element> &, const step &);
+    void isogeny(LiDIA::point<LiDIA::gf_element> &, const field_extension &) const;
     // it is fed an element of E_{i-1}. inplace
 
-    // gf_element j_invariant() { return E_i.j_invariant(); } // rename this crap
+    // gf_element j_invariant() { return E_i.j_invariant(); } // rename this
     const torsion_basis &get_P() const { return P; }
 
-    friend istream &operator>>(istream &, step &);
-    friend ostream &operator<<(ostream &, const step &);
+    friend std::istream &operator>>(std::istream &, step &);
+    friend std::ostream &operator<<(std::ostream &, const step &);
 };
 
-istream &operator>>(istream &, step &);
-ostream &operator<<(ostream &, const step &);
+std::istream &operator>>(std::istream &, step &);
+std::ostream &operator<<(std::ostream &, const step &);
 
-class path : public vector<step> {
+class path : public std::vector<step> {
     step dummy;
 
   public:
-    path(const elliptic_curve<gf_element> &E_) : dummy(E_, bigint_matrix(4, 4)) {
+    path(const LiDIA::elliptic_curve<LiDIA::gf_element> &E_)
+        : dummy(E_, LiDIA::bigint_matrix(4, 4)) {
         for (int i = 0; i < 4; i++)
             dummy.I_i.sto(i, i, 1);
     }
@@ -59,6 +57,6 @@ class path : public vector<step> {
         if (empty())
             return dummy;
         else
-            return vector<step>::back();
+            return std::vector<step>::back();
     }
 };

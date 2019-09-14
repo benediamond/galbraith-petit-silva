@@ -17,19 +17,16 @@
 #include "order.h"
 #include "basis.h"
 
-using namespace std;
-using namespace LiDIA;
-
-class gps : public eco_prime {
+class gps : public LiDIA::eco_prime {
   private:
     int lambda;
     // not storing n!
-    galois_field K;
+    LiDIA::galois_field K;
 
     maximal_order O_;
 
-    bigint Z; // alternative name for B, taken by coeff
-    array<vector<torsion_basis>, 2> P;
+    LiDIA::bigint Z; // alternative name for B, taken by coeff
+    std::array<std::vector<torsion_basis>, 2> P;
 
   public:
     gps() {}
@@ -39,11 +36,11 @@ class gps : public eco_prime {
 
     // points on the base curve.
 
-    vector<walker> keychain; // making this public... will have "sign" and "verify" methods...
+    std::vector<walker> keychain; // making this public... will have "sign" and "verify" methods...
 
-    friend istream &operator>>(istream &, gps &);
-    friend ostream &operator<<(ostream &, const gps &);
+    friend std::istream &operator>>(std::istream &, gps &);
+    friend std::ostream &operator<<(std::ostream &, const gps &);
 };
 
-istream &operator>>(istream &, gps &);
-ostream &operator<<(ostream &, const gps &);
+std::istream &operator>>(std::istream &, gps &);
+std::ostream &operator<<(std::ostream &, const gps &);

@@ -1,5 +1,8 @@
 #include "extension.h"
 
+using namespace std;
+using namespace LiDIA;
+
 field_extension::field_extension(const galois_field &K, const galois_field &L)
     : K(K), L(L), p(K.characteristic()), embedding(L.degree(), K.degree(), p),
       restriction(K.degree(), L.degree(), p) {

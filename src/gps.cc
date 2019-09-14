@@ -1,5 +1,8 @@
 #include "gps.h"
 
+using namespace std;
+using namespace LiDIA;
+
 gps::gps(int lambda, float epsilon) : lambda(lambda) { // purpose of epsilon?
     bigint p;
     power(p, bigint(2), 4 * lambda);

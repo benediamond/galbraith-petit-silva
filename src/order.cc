@@ -1,5 +1,8 @@
 #include "order.h"
 
+using namespace std;
+using namespace LiDIA;
+
 maximal_order::maximal_order(const class step &step, const gf_element &u) : step(step), u(u) {
     p.assign(step.get_P().ext.get_p());
     q.assign(step.get_P().l);

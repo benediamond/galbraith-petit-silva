@@ -1,5 +1,8 @@
 #include "step.h"
 
+using namespace std;
+using namespace LiDIA;
+
 step::step(const elliptic_curve<gf_element> &E_, const bigint_matrix &I_) : E_i(E_), I_i(I_) {}
 
 step::step(const torsion_basis &P, const point<gf_element> &Q, const step &last)

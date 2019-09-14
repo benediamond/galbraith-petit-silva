@@ -4,22 +4,21 @@
 
 #include "extension.h"
 
-using namespace std;
-using namespace LiDIA;
-
 class torsion_basis {
   public:
     int l;
 
-    field_extension ext;              // contains K and L
-    elliptic_curve<gf_element> E_ext; // weirdly necessary when reading in points... revisit
-    array<point<gf_element>, 2> P;    // use the same name again...
+    field_extension ext; // contains K and L
+    LiDIA::elliptic_curve<LiDIA::gf_element> E_ext;
+    // weirdly necessary when reading in points... revisit
+    std::array<LiDIA::point<LiDIA::gf_element>, 2> P; // use the same name again...
     // should any/all of these be references?
 
     torsion_basis() {}
-    torsion_basis(const int, const field_extension &, const elliptic_curve<gf_element> &,
-                  const array<point<gf_element>, 2> &);
+    torsion_basis(const int, const field_extension &,
+                  const LiDIA::elliptic_curve<LiDIA::gf_element> &,
+                  const std::array<LiDIA::point<LiDIA::gf_element>, 2> &);
 };
 
-istream &operator>>(istream &in, torsion_basis &P);
-ostream &operator<<(ostream &out, const torsion_basis &P);
+std::istream &operator>>(std::istream &in, torsion_basis &P);
+std::ostream &operator<<(std::ostream &out, const torsion_basis &P);

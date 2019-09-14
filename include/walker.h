@@ -26,32 +26,29 @@
 #include "order.h"
 #include "step.h"
 
-using namespace std;
-using namespace LiDIA;
-
 class walker {
     int lambda;
-    const elliptic_curve<gf_element> &E_;
-    const array<vector<torsion_basis>, 2> &P;
+    const LiDIA::elliptic_curve<LiDIA::gf_element> &E_;
+    const std::array<std::vector<torsion_basis>, 2> &P;
     const maximal_order &O_;
 
     path random;
     path ideal; // consider tinkering with names here
 
-    string w(bool challenge);
+    std::string w(bool challenge);
 
-    void update_ideal(const torsion_basis &, const point<gf_element> &);
+    void update_ideal(const torsion_basis &, const LiDIA::point<LiDIA::gf_element> &);
     void random_step(const torsion_basis &);
-    void ideal_step(const torsion_basis &, const bigint_matrix &);
+    void ideal_step(const torsion_basis &, const LiDIA::bigint_matrix &);
 
     void reroute();
     void reset();
 
   public:
-    walker(int, const elliptic_curve<gf_element> &, const array<vector<torsion_basis>, 2> &,
-           const maximal_order &);
-    gf_element public_key() { return random.back().E_i.j_invariant(); }
+    walker(int, const LiDIA::elliptic_curve<LiDIA::gf_element> &,
+           const std::array<std::vector<torsion_basis>, 2> &, const maximal_order &);
+    LiDIA::gf_element public_key() { return random.back().E_i.j_invariant(); }
     // ^^^ requires that we're "between walks"...
-    string sign(string message);
-    bool verify(string message, string signature);
+    std::string sign(std::string message);                   // should this return bytes?
+    bool verify(std::string message, std::string signature); // should this take bytes?
 };

@@ -1,7 +1,8 @@
 #include "walker.h"
 
-using CryptoPP::byte;
-using CryptoPP::SHA3_512;
+using namespace std;
+using namespace LiDIA;
+using namespace CryptoPP;
 
 void walker::update_ideal(const torsion_basis &P, const point<gf_element> &Q_i) {
     bigint_matrix I_i_minus_1(random.back().I_i);
@@ -317,9 +318,9 @@ string g(string w, int bits) {
     byte digest[SHA3_512::DIGESTSIZE];
     SHA3_512().CalculateDigest(digest, (const byte *)w.c_str(), w.length());
 
-    CryptoPP::HexEncoder encoder;
+    HexEncoder encoder;
     std::string output;
-    encoder.Attach(new CryptoPP::StringSink(output));
+    encoder.Attach(new StringSink(output));
     encoder.Put(digest, bits / 8 + 1); // number of bytes...?
     encoder.MessageEnd();
     return output;
@@ -402,9 +403,9 @@ string walker::sign(string message) {
     byte digest[SHA3_512::DIGESTSIZE];
     H.Final(digest);
 
-    CryptoPP::HexEncoder encoder;
+    HexEncoder encoder;
     string h;
-    encoder.Attach(new CryptoPP::StringSink(h));
+    encoder.Attach(new StringSink(h));
     encoder.Put(digest, t / 8 + 1); // number of bytes...?
     encoder.MessageEnd();
 
@@ -508,9 +509,9 @@ bool walker::verify(string message, string signature) {
     byte digest[SHA3_512::DIGESTSIZE];
     SHA3_512().CalculateDigest(digest, (const byte *)ss.str().c_str(), ss.str().length());
 
-    CryptoPP::HexEncoder encoder;
+    HexEncoder encoder;
     string my_h;
-    encoder.Attach(new CryptoPP::StringSink(my_h));
+    encoder.Attach(new StringSink(my_h));
     encoder.Put(digest, t / 8 + 1); // number of bytes...?
     encoder.MessageEnd();
     return h.compare(my_h) == 0;
