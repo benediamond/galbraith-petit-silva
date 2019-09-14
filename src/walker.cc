@@ -19,7 +19,6 @@ void walker::update_ideal(const torsion_basis &P, const point<gf_element> &Q_i) 
     array<point<gf_element>, 4> B_Q_i{one_over_two * (Q_i + i_Q_i), one_over_two * (j_Q_i - k_Q_i),
                                       one_over_q * (i_Q_i - O_.c * k_Q_i), -k_Q_i};
     base_vector<bigint> a_i(4);
-    int count = 0;
     do {
         while (true) { // { do {
             // coeffs.randomize(P.le); // unfortunately, this function is completely broken
