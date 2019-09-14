@@ -9,15 +9,15 @@
 #include <LiDIA/elliptic_curve.h>
 #include <LiDIA/point.h>
 
+#include <cryptopp/sha3.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/hex.h>
+
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <array>
 #include <vector>
-
-#include <cryptopp/sha3.h>
-#include <cryptopp/filters.h>
-#include <cryptopp/hex.h>
 
 #pragma once
 
