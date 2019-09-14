@@ -43,10 +43,10 @@ $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
 
 debug: CXXFLAGS += -DDEBUG -g3 -O0
-debug: clean all
+debug: all
 
 release: CXXFLAGS += -O2
-release: clean all
+release: all
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*
