@@ -18,9 +18,9 @@ int main(int argc, const char *argv[]) {
     // unsigned int a;
     // cin >> a;
     // random_generator::seed(a);
-
-    // gps gps(4, 0.001);
-    // ofstream out("./src/serializations/l = 4, lite.txt");
+    //
+    // gps gps(8, 0.001);
+    // ofstream out("./src/serializations/l = 4.txt");
     // out << gps;
 
     gps gps;

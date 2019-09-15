@@ -209,9 +209,14 @@ gps::gps(int lambda, float epsilon) : lambda(lambda) { // purpose of epsilon?
                 cout << "finding basis for l = " << l << endl;
 
                 array<polynomial<gf_element>, 2> divisors;
+                factorization<gf_polynomial> div_fact;
                 for (int j = 0; j < 2; j++) {
                     ftau[0] = find_root(meq_pol);
                     compute_divisor_of_division_polynomial(divisors[j], Ea, Eb);
+                    factor(div_fact, divisors[j]); // now factor the _order-l / 2_ guy
+                    int r;
+                    rg >> r;
+                    divisors[j] = div_fact.prime_base(r % div_fact.no_of_prime_components()).base();
                 }
                 // args Ea and Eb are never used
 
