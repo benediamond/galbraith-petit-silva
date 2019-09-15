@@ -25,7 +25,7 @@ class field_extension {
     LiDIA::gf_element embed(const LiDIA::gf_element &a) const;
     LiDIA::polynomial<LiDIA::gf_element> embed(const LiDIA::polynomial<LiDIA::gf_element> &a) const;
     LiDIA::elliptic_curve<LiDIA::gf_element>
-    embed(const LiDIA::elliptic_curve<LiDIA::gf_element> E) const;
+    embed(const LiDIA::elliptic_curve<LiDIA::gf_element> &E) const;
     LiDIA::gf_element restrict(const LiDIA::gf_element &b) const;
     LiDIA::polynomial<LiDIA::gf_element>
     restrict(const LiDIA::polynomial<LiDIA::gf_element> &b) const;

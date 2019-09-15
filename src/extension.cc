@@ -7,9 +7,9 @@ field_extension::field_extension(const galois_field &K, const galois_field &L)
     : K(K), L(L), p(K.characteristic()), embedding(L.degree(), K.degree(), p),
       restriction(K.degree(), L.degree(), p) {
     if (L.characteristic() != p)
-        throw std::invalid_argument("characteristics are unequal.");
+        throw generic_error("Characteristics are unequal.");
     if (L.degree() % K.degree() != 0)
-        throw std::invalid_argument("deg(K) must divide deg(L).");
+        throw generic_error("deg(K) must divide deg(L).");
 
     polynomial<gf_element> f_ext(K.irred_polynomial(), L);
     gf_element h = find_root(f_ext);
@@ -23,18 +23,16 @@ field_extension::field_extension(const galois_field &K, const galois_field &L)
         multiply(accum, accum, h);
     }
 
-    cout << "embedding: " << embedding << endl;
     bigint dummy;
     restriction = inv(trans(embedding) * embedding, dummy) * trans(embedding);
     // warning: not always the case that inverse exists! this gets tricky fast
     // see e.g. https://www.sciencedirect.com/science/article/pii/0012365X78901449
     // if fails, try again with different seed?
-    cout << "restriction: " << restriction << endl;
 }
 
 gf_element field_extension::embed(const gf_element &a) const {
     if (a.get_field() != K)
-        throw std::invalid_argument("a doesn't belong to the base field.");
+        throw generic_error("a doesn't belong to the base field.");
     Fp_polynomial a_poly(a.polynomial_rep());
     bigmod_matrix a_vec(K.degree(), 1, p);
     for (int i = 0; i < K.degree(); i++)
@@ -58,13 +56,13 @@ polynomial<gf_element> field_extension::embed(const polynomial<gf_element> &a) c
     return b;
 }
 
-elliptic_curve<gf_element> field_extension::embed(const elliptic_curve<gf_element> E) const {
+elliptic_curve<gf_element> field_extension::embed(const elliptic_curve<gf_element> &E) const {
     return elliptic_curve<gf_element>(embed(E.get_a4()), embed(E.get_a6()));
 }
 
 gf_element field_extension::restrict(const gf_element &b) const {
     if (b.get_field() != L)
-        throw std::invalid_argument("b doesn't belong to the extension field.");
+        throw generic_error("b doesn't belong to the extension field.");
     Fp_polynomial b_poly(b.polynomial_rep());
     bigmod_matrix b_vec(L.degree(), 1, p);
     for (int i = 0; i < L.degree(); i++)
@@ -79,7 +77,7 @@ gf_element field_extension::restrict(const gf_element &b) const {
     a.set_polynomial_rep(a_poly);
 
     if (embedding * a_vec != b_vec)
-        throw std::invalid_argument("b doesn't belong to the image of K.");
+        throw generic_error("b doesn't belong to the image of K.");
     return a;
 }
 

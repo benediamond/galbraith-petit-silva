@@ -9,13 +9,14 @@ gps::gps(int lambda, float epsilon) : lambda(lambda) { // purpose of epsilon?
     do {
         p = next_prime(p);
     } while (p % 24 != 1);
+    random_generator rg;
 
     // i want p to be == 1 modulo 8 (to get the last row of the table)
     // _and_ == 1 (modulo 3), so that (-3 / p) != -1. that way, following
     // Bröker's algorithm, the q chosen won't be 3, and we will use the final case.
     // this avoids a curve with j-inv = 0.
     K.assign(galois_field(p, 2));
-
+    polynomial<gf_element> curve_eqn(K); // will set below
     // see Reinier Bröker, Constructing Supersingular Elliptic Curves
     bigint q(3);
     do {
@@ -59,62 +60,17 @@ gps::gps(int lambda, float epsilon) : lambda(lambda) { // purpose of epsilon?
         A = 3 * j / temp;
         B = 2 * j / temp;
         set_curve(A, B);
+        curve_eqn = CurveEqn();
         cout << "curve set: " << E_ << endl;
 
-        factorization<gf_polynomial> div_fact;
         polynomial<gf_element> div_pol(K);
         int q_int;
         q.intify(q_int);
         compute_psi(div_pol, q_int);
-        divide(div_pol, div_pol, div_pol.lead_coeff());
-        factor(div_fact, div_pol); // ONLY time we'll have to factor a divpol. also, could use edf?
-        cout << "divpol factored: " << div_fact << endl;
+        divide(div_pol, div_pol, div_pol.lead_coeff()); // necessary?
+        torsion_basis Q(K, q_int, E_, curve_eqn, {div_pol, div_pol});
 
-        torsion_basis Q;
-        random_generator rg;
-        do {
-            array<polynomial<gf_element>, 2> divisors;
-            for (int j = 0; j < 2; j++) {
-                int r;
-                rg >> r;
-                divisors[j] = div_fact.prime_base(r % div_fact.no_of_prime_components()).base();
-            }
-            galois_field L(K);
-            field_extension ext(K, L);
-            elliptic_curve<gf_element> E_ext;
-            array<point<gf_element>, 2> P; // shadows class member
-
-            lidia_size_t lcm_degree = lcm(divisors[0].degree(), divisors[1].degree());
-            // all factors should be of equal degree.
-            if (lcm_degree > 1) {
-                L = galois_field(K.characteristic(), 2 * lcm_degree);
-                ext = field_extension(K, L);
-            }
-            // _either way_ i guess i should embed the polys into L, even if it's trivial
-            array<array<gf_element, 2>, 2> P_temp;
-            for (int j = 0; j < 2; j++) {
-                polynomial<gf_element> lifted_divisor = ext.embed(divisors[j]);
-                P_temp[j][0].assign(find_root(lifted_divisor));
-            }
-            polynomial<gf_element> curve_eqn = ext.embed(CurveEqn());
-            if (curve_eqn(P_temp[0][0]).is_square() && curve_eqn(P_temp[1][0]).is_square()) {
-                for (int j = 0; j < 2; j++)
-                    P_temp[j][1].assign(sqrt(curve_eqn(P_temp[j][0])));
-            } else {
-                L = galois_field(K.characteristic(), 4 * lcm_degree);
-                ext = field_extension(K, L);
-                curve_eqn = ext.embed(CurveEqn());
-                for (int j = 0; j < 2; j++) {
-                    polynomial<gf_element> lifted_divisor = ext.embed(divisors[j]);
-                    P_temp[j][0].assign(find_root(lifted_divisor));
-                    P_temp[j][1].assign(sqrt(curve_eqn(P_temp[j][0])));
-                }
-            }
-            E_ext = ext.embed(E_);
-            for (int j = 0; j < 2; j++)
-                P[j] = point<gf_element>(P_temp[j][0], P_temp[j][1], E_ext);
-            Q = torsion_basis(q_int, ext, E_ext, P);
-        } while (bg_algorithm(Q.P[0], Q.P[1], 0, q - 1) != -1);
+        // "cute" workaround to integrate this and the below. later, we'll have 2 elkies factors
         cout << "q-torsion basis chosen: " << Q.P[0] << ", " << Q.P[1] << endl;
 
         while (true) {
@@ -192,7 +148,6 @@ gps::gps(int lambda, float epsilon) : lambda(lambda) { // purpose of epsilon?
         // warning: if something is wrong, this could silently run out the whole loop.
     }
 
-    random_generator rg;
     for (int k = 0; k < 2; k++) {                                          // parallelize
         for (lidia_size_t i = 0; i < S[k].no_of_prime_components(); i++) { // parallelize
             l = S[k].prime_base(i).base();
@@ -201,61 +156,15 @@ gps::gps(int lambda, float epsilon) : lambda(lambda) { // purpose of epsilon?
             set_prime(l_int);
             build_poly_in_X(meq_pol, jinv);
 
-            galois_field L(K); // this is disgusting and unnecessary. just to initialize ext
-            field_extension ext(K, L);
-            elliptic_curve<gf_element> E_ext;
-            array<point<gf_element>, 2> P_i;
+            array<polynomial<gf_element>, 2> div_factors;
             do {
-                cout << "finding basis for l = " << l << endl;
-
-                array<polynomial<gf_element>, 2> divisors;
-                factorization<gf_polynomial> div_fact;
                 for (int j = 0; j < 2; j++) {
                     ftau[0] = find_root(meq_pol);
-                    compute_divisor_of_division_polynomial(divisors[j], Ea, Eb);
-                    factor(div_fact, divisors[j]); // now factor the _order-l / 2_ guy
-                    int r;
-                    rg >> r;
-                    divisors[j] = div_fact.prime_base(r % div_fact.no_of_prime_components()).base();
+                    compute_divisor_of_division_polynomial(div_factors[j], Ea, Eb);
                 }
-                // args Ea and Eb are never used
-
-                lidia_size_t lcm_degree = lcm(divisors[0].degree(), divisors[1].degree());
-                // ^^^ max should suffice here, for complicated reasons... (even for e > 1)
-                // actually, in the case e == 1, all factors should be of equal degree.
-                if (lcm_degree > 1) {
-                    L = galois_field(K.characteristic(), 2 * lcm_degree);
-                    ext = field_extension(K, L);
-                }
-                // _either way_ i guess i should embed the polys into L, even if it's trivial
-                array<array<gf_element, 2>, 2> P_temp;
-                for (int j = 0; j < 2; j++) {
-                    polynomial<gf_element> lifted_divisor = ext.embed(divisors[j]);
-                    P_temp[j][0] = find_root(lifted_divisor);
-                }
-                polynomial<gf_element> curve_eqn = ext.embed(CurveEqn());
-                if (curve_eqn(P_temp[0][0]).is_square() && curve_eqn(P_temp[1][0]).is_square()) {
-                    for (int j = 0; j < 2; j++)
-                        P_temp[j][1] = sqrt(curve_eqn(P_temp[j][0]));
-                } else {
-                    L = galois_field(K.characteristic(), 4 * lcm_degree);
-                    ext = field_extension(K, L);
-                    curve_eqn = ext.embed(CurveEqn());
-                    for (int j = 0; j < 2; j++) {
-                        polynomial<gf_element> lifted_divisor = ext.embed(divisors[j]);
-                        P_temp[j][0] = find_root(lifted_divisor); // this is extremely slow,
-                        // and worse yet, would be completely avoidable if we had a good way to
-                        // work with towers of field extensions. we already have the irreducible
-                        // polynomial which this thing is going to be a root of.
-                        P_temp[j][1] = sqrt(curve_eqn(P_temp[j][0]));
-                    }
-                }
-                E_ext = ext.embed(E_);
-                for (int j = 0; j < 2; j++)
-                    P_i[j] = point<gf_element>(P_temp[j][0], P_temp[j][1], E_ext);
-            } while (bg_algorithm(P_i[0], P_i[1], 0, l - 1) != -1);
-            P[k].emplace_back(l_int, ext, E_ext, P_i);
-        } // todo: come up with better square root algorithms.
+            } while (div_factors[0] == div_factors[1]);
+            P[k].emplace_back(K, l_int, E_, curve_eqn, div_factors);
+        }
     }
 }
 
@@ -274,14 +183,12 @@ istream &operator>>(istream &in, gps &gps) {
     in >> E_;
     gps.set_curve(E_.get_a4(), E_.get_a6());
 
-    torsion_basis P_(0, field_extension(gps.K, gps.K), E_, {E_, E_});
-    // torsion_basis P_(1, field_extension(gps.K, gps.K), gps.E_, {infinity, infinity});
     for (int k = 0; k < 2; k++) {
         int r;
         in >> r;
-        // ^^^ need to initialize this with a dummy, to avoid "e == NULL" runtime errors?
-        gps.P[k].resize(r, P_);
+        gps.P[k].resize(r);
         for (int i = 0; i < r; i++) {
+            gps.P[k][i].E_ext = E_; // necessary to avoid e = NULL runtime errors
             in >> gps.P[k][i];
         }
     }

@@ -15,9 +15,10 @@ class torsion_basis {
     // should any/all of these be references?
 
     torsion_basis() {}
-    torsion_basis(const int, const field_extension &,
+    torsion_basis(const LiDIA::galois_field &, const int l,
                   const LiDIA::elliptic_curve<LiDIA::gf_element> &,
-                  const std::array<LiDIA::point<LiDIA::gf_element>, 2> &);
+                  const LiDIA::polynomial<LiDIA::gf_element> &,
+                  const std::array<LiDIA::polynomial<LiDIA::gf_element>, 2> &div_factors);
 };
 
 std::istream &operator>>(std::istream &in, torsion_basis &P);
