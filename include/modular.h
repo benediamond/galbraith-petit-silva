@@ -19,7 +19,7 @@ class modular { // made to mimic the interface of meq_prime.
         bigint_to_string(l, l_str);
         infile.close();
 
-        infile.open(std::string("../src/modular/phi_j_") + l_str + std::string(".txt"));
+        infile.open(std::string("./src/modular/phi_j_") + l_str + std::string(".txt"));
         // todo: exception if reading fails! will give cryptic error msg.
         infile.clear();
         infile.seekg(0, std::ios::beg);
