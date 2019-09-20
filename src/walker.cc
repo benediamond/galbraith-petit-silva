@@ -193,6 +193,8 @@ void walker::reroute() {
     del_mat.sto(0, 1, del_1ijk[1] + y * del_1ijk[2] - x * del_1ijk[3]);
     // finally, embed del into M_2(Z / NZ) using the matrix on your page...
 
+    int failures = 0;
+
     base_vector<bigint> b_1(4), b_temp(4), b_2_temp(2);
     while (true) { // first cornacchia
         sqrt(m, n * S[0] / O_.p);
@@ -204,8 +206,14 @@ void walker::reroute() {
         // by sampling from the rectangle [+- sqrt(NS / p)] * [+- sqrt(NS / pq)], then
         // continuing whenever temp isn't prime (e.g., is negative!) we should find something
         temp.assign(n * S[0] - O_.p * (b_temp[2] * b_temp[2] + O_.q * b_temp[3] * b_temp[3]));
-        if (!temp.is_prime())
+        if (!temp.is_prime()) {
+            failures++;
+            if (failures == 1000) {
+                cout << "first cornacchia failed!" << endl;
+                return reroute();
+            }
             continue;
+        }
         if (cornacchia(b_temp[0], b_temp[1], -4 * O_.q, temp)) {
             divide(b_temp[0], b_temp[0], 2); // because of LiDIA cornacchia
             bigmod_matrix b_1_mat(2, 2, n);
@@ -245,8 +253,14 @@ void walker::reroute() {
         bigint store_1(mu * b_2_temp[1] + n * b_temp[3]);
         bigint store((S[1] - O_.p * (store_0 * store_0 + O_.q * store_1 * store_1)) / (n * n));
         // big enough? if not we'll increase S[2] even further.
-        if (!store.is_prime()) // hopefully won't fail forever!
+        if (!store.is_prime()) {
+            failures++;
+            if (failures == 1000) {
+                cout << "second cornacchia failed!" << endl;
+                return reroute();
+            }
             continue;
+        }
         if (cornacchia(b_temp[0], b_temp[1], -4 * O_.q, store)) {
             divide(b_temp[0], b_temp[0], 2); // because of LiDIA cornacchia
             multiply(b_temp[0], b_temp[0], n);
