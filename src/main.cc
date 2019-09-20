@@ -20,11 +20,11 @@ int main(int argc, const char *argv[]) {
     // random_generator::seed(a);
     //
     // gps gps(8, 0.001);
-    // ofstream out("./src/serializations/l = 4.txt");
+    // ofstream out("./src/serializations/l = 8.txt");
     // out << gps;
 
     gps gps;
-    ifstream in("./src/serializations/l = 4.txt");
+    ifstream in("./src/serializations/l = 8.txt");
     in >> gps;
 
     gps.gen_keypair();
