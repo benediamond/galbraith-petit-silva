@@ -115,10 +115,10 @@ void walker::reroute() {
     bigint_matrix I_(random.back().I_i);
     // NOT YET minkowski basis, let alone a random one.
     array<bigint, 2> S{1, 1};
+    multiply(S[0], S[0], P[0][0].l);
+    multiply(S[1], S[1], P[1][0].l);
     for (int k = 0; k < 2; k++) { // different from the usual def. of S...
-        multiply(S[0], S[0], P[k][0].l);
-        multiply(S[0], S[0], P[k][1].l);
-        for (int i = 2; i < P[k].size(); i++)
+        for (int i = 1; i < P[k].size(); i++)
             multiply(S[1], S[1], P[k][i].l);
     }
 
