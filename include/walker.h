@@ -8,6 +8,7 @@
 #include <LiDIA/bigint_lattice.h>
 #include <LiDIA/elliptic_curve.h>
 #include <LiDIA/point.h>
+#include <LiDIA/sort_vector.h>
 
 #include <cryptopp/sha3.h>
 #include <cryptopp/filters.h>

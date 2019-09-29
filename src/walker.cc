@@ -289,18 +289,37 @@ void walker::reset() {
 }
 
 string walker::w(bool challenge) { // challenge: which path are we dealing with?
-    // in the future this can be replaced by some kind of more fancy representation of the isogeny path
     stringstream w;
+    modular mod(public_key().get_field()); // why am i not storing &K again?
     if (!challenge) {
-        for (int i = 1; i < P[1].size(); i += 2)
-            w << random[P[0].size() + i].E_i.j_invariant() << " ";
-        if (P[1].size() % 2 == 1)
-            w << random[P[0].size() + P[1].size() - 1].E_i.j_invariant() << " ";
+        gf_element source = random[P[0].size() - 1].E_i.j_invariant(); // can't use public_key!
+        for (int i = 0; i < P[1].size(); i++) {
+            polynomial<gf_element> modular = mod.build(P[1][i].l, source);
+            sort_vector<gf_element> roots(find_roots(modular, 1), vector_flags());
+            roots.sort(); // will this happen during initialization...? it seems not.
+            int pos = 0;
+            gf_element target = random[P[0].size() + i].E_i.j_invariant();
+            roots.bin_search(target, pos);
+            // wasteful. technically, we only care about which position _target_ _would_ occur in,
+            // if the list were sorted. this can be determined using a single linear pass
+            w << pos << " ";
+            source = target;
+        }
     } else {
-        for (int i = 1; i < P[0].size() + P[1].size(); i += 2)
-            w << ideal[i].E_i.j_invariant() << " ";
-        if (ideal.size() % 2 == 1)
-            w << ideal[ideal.size() - 1].E_i.j_invariant() << " ";
+        gf_element source = E_.j_invariant();
+        for (int i = 0; i < P[0].size() + P[1].size(); i++) {
+            polynomial<gf_element> modular =
+                mod.build(i < P[0].size() ? P[0][i].l : P[1][i - P[0].size()].l, source);
+            sort_vector<gf_element> roots(find_roots(modular, 1), vector_flags());
+            roots.sort(); // will this happen during initialization...? it seems not.
+            int pos = 0;
+            gf_element target = ideal[i].E_i.j_invariant();
+            roots.bin_search(target, pos);
+            // wasteful. technically, we only care about which position _target_ _would_ occur in,
+            // if the list were sorted. this can be determined using a single linear pass
+            w << pos << " ";
+            source = target;
+        }
     }
 
     return w.str();
@@ -321,7 +340,7 @@ string g(string w, int bits) {
     HexEncoder encoder;
     std::string output;
     encoder.Attach(new StringSink(output));
-    encoder.Put(digest, bits / 8 + 1); // number of bytes...?
+    encoder.Put(digest, bits / 8 + (bits % 8 == 0 ? 0 : 1)); // number of bytes...?
     encoder.MessageEnd();
     return output;
 }
@@ -368,11 +387,11 @@ string walker::sign(string message) {
     gf_element::set_output_format(0);
 
     int t = 3 * lambda;
-    bigint temp(O_.p);
+    bigint temp(max(P[0][P[0].size() - 1].l, P[1][P[1].size() - 1].l));
     ceil(temp, log(bigfloat(temp)) / log(bigfloat(2)));
     array<int, 2> N;
-    (2 * (P[1].size() / 2 + P[1].size() % 2) * temp).intify(N[0]);
-    (2 * ((P[0].size() + P[1].size()) / 2 + (P[0].size() + P[1].size()) % 2) * temp).intify(N[1]);
+    (P[1].size() * temp).intify(N[0]);
+    ((P[0].size() + P[1].size()) * temp).intify(N[1]);
 
     stringstream ss, gs;
     ss << message << " ";
@@ -389,7 +408,7 @@ string walker::sign(string message) {
         rsp_store[0].push_back(w(false));
         rsp_store[1].push_back(w(true));
 
-        ss << public_key() << " ";
+        ss << public_key() << " "; // _not_ the pubkey but rather j_2, i
         g_store[0].push_back(g(rsp_store[0].back(), N[0]));
         g_store[1].push_back(g(rsp_store[1].back(), N[1]));
         gs << g_store[0].back() << " ";
@@ -406,7 +425,7 @@ string walker::sign(string message) {
     HexEncoder encoder;
     string h;
     encoder.Attach(new StringSink(h));
-    encoder.Put(digest, t / 8 + 1); // number of bytes...?
+    encoder.Put(digest, t / 8 + (t % 8 == 0 ? 0 : 1));
     encoder.MessageEnd();
 
     stringstream sigma;
@@ -424,11 +443,11 @@ bool walker::verify(string message, string signature) {
     int t = 3 * lambda;
     galois_field K(public_key().get_field()); // a bit ugly
     modular mod(K);                           // only going to be using primes now. nice
-    bigint temp(K.characteristic());
-    ceil(temp, log(bigfloat(temp)) / log(bigfloat(2)));
+    bigint temp(max(P[0][P[0].size() - 1].l, P[1][P[1].size() - 1].l));
+    ceil(temp, log(bigfloat(temp)) / log(bigfloat(2))); // max number of bits for each step
     array<int, 2> N;
-    (2 * (P[1].size() / 2 + P[1].size() % 2) * temp).intify(N[0]);
-    (2 * ((P[0].size() + P[1].size()) / 2 + (P[0].size() + P[1].size()) % 2) * temp).intify(N[1]);
+    (P[1].size() * temp).intify(N[0]);
+    ((P[0].size() + P[1].size()) * temp).intify(N[1]);
 
     stringstream ss, sigstream(signature);
     ss << message << " ";
@@ -436,63 +455,36 @@ bool walker::verify(string message, string signature) {
     string h;
     sigstream >> h;
     vector<string> rsp_store;
-    gf_element source(K), target(K);
     for (int l = 0; l < t; l++) { // parallelize
         stringstream rsp_stream, temp_stream;
+        gf_element source(K);
         bool h_i = decoder(h, l);
         if (!h_i) {
-            target = public_key();
-            for (int i = 1; i < P[1].size(); i += 2) {
-                source = target;
-                sigstream >> target;
-                if (gcd(mod.build(P[1][i - 1].l, source), mod.build(P[1][i].l, target)).degree() ==
-                    0)
-                    return false;
-                rsp_stream << target << " ";
-            }
-            if (P[1].size() % 2 == 1) {
-                source = target;
-                sigstream >> target;
-                if (!mod.build(P[1][P[1].size() - 1].l, source)(target).is_zero())
-                    return false;
-                rsp_stream << target << " ";
+            source = public_key();
+            for (int i = 0; i < P[1].size(); i++) {
+                polynomial<gf_element> modular = mod.build(P[1][i].l, source);
+                sort_vector<gf_element> roots(find_roots(modular, 1), vector_flags());
+                roots.sort(); // will this happen during initialization...? it seems not.
+                int pos = 0;
+                sigstream >> pos;
+                rsp_stream << pos << " ";
+                source = roots[pos];
             }
         } else {
-            target = E_.j_invariant();
-            for (int i = 1; i < P[0].size(); i += 2) {
-                source = target;
-                sigstream >> target;
-                if (gcd(mod.build(P[0][i - 1].l, source), mod.build(P[0][i].l, target)).degree() ==
-                    0)
-                    return false;
-                rsp_stream << target << " ";
-            }
-            if (P[0].size() % 2 == 1) {
-                source = target;
-                sigstream >> target;
-                if (gcd(mod.build(P[0][P[0].size() - 1].l, source), mod.build(P[1][0].l, target))
-                        .degree() == 0)
-                    return false;
-                rsp_stream << target << " ";
-            }
-            for (int i = 1 + P[0].size() % 2; i < P[1].size(); i += 2) {
-                source = target;
-                sigstream >> target;
-                if (gcd(mod.build(P[1][i - 1].l, source), mod.build(P[1][i].l, target)).degree() ==
-                    0)
-                    return false;
-                rsp_stream << target << " ";
-            }
-            if ((P[0].size() + P[1].size()) % 2 == 1) {
-                source = target;
-                sigstream >> target;
-                if (!mod.build(P[1][P[1].size() - 1].l, source)(target).is_zero())
-                    return false;
-                rsp_stream << target << " ";
+            source = E_.j_invariant();
+            for (int i = 0; i < P[0].size() + P[1].size(); i++) {
+                polynomial<gf_element> modular =
+                    mod.build(i < P[0].size() ? P[0][i].l : P[1][i - P[0].size()].l, source);
+                sort_vector<gf_element> roots(find_roots(modular, 1), vector_flags());
+                roots.sort(); // will this happen during initialization...? it seems not.
+                int pos = 0;
+                sigstream >> pos;
+                rsp_stream << pos << " ";
+                source = roots[pos];
             }
         }
         rsp_store.push_back(rsp_stream.str());
-        ss << target << " ";
+        ss << source << " ";
     }
     for (int l = 0; l < t; l++) {
         string temp;
@@ -512,7 +504,7 @@ bool walker::verify(string message, string signature) {
     HexEncoder encoder;
     string my_h;
     encoder.Attach(new StringSink(my_h));
-    encoder.Put(digest, t / 8 + 1); // number of bytes...?
+    encoder.Put(digest, t / 8 + (t % 8 == 0 ? 0 : 1)); // number of bytes...?
     encoder.MessageEnd();
     return h.compare(my_h) == 0;
 }
