@@ -9,9 +9,11 @@
 #include <sstream>
 #include <array>
 #include <vector>
+#include <chrono>
 
 using namespace LiDIA;
 using namespace std;
+using namespace chrono;
 
 int main(int argc, const char *argv[]) {
     // cout << "enter random seed...";

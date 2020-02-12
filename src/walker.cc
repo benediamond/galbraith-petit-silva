@@ -208,7 +208,7 @@ void walker::reroute() {
         temp.assign(n * S[0] - O_.p * (b_temp[2] * b_temp[2] + O_.q * b_temp[3] * b_temp[3]));
         if (!temp.is_prime()) {
             failures++;
-            if (failures == 1000) {
+            if (failures == 10000) {
                 cout << "first cornacchia failed!" << endl;
                 return reroute();
             }
@@ -237,6 +237,8 @@ void walker::reroute() {
         }
     }
 
+    failures = 0; // reset tally
+
     c.assign(S[1]);
     temp.assign(O_.p * (b_2_temp[0] * b_2_temp[0] + O_.q * b_2_temp[1] * b_2_temp[1]));
     divide(c, c, temp);
@@ -255,7 +257,7 @@ void walker::reroute() {
         // big enough? if not we'll increase S[2] even further.
         if (!store.is_prime()) {
             failures++;
-            if (failures == 1000) {
+            if (failures == 10000) {
                 cout << "second cornacchia failed!" << endl;
                 return reroute();
             }
