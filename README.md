@@ -4,6 +4,8 @@ This is still a proof-of-concept, and not suitable (or practical, yet) for actua
 
 ## Technical Notes
 
+Precise technical details of this implementation's approach are given in the technical note [`docs/GPS.pdf`](docs/GPS.pdf); a summary is given below.
+
 ### Overview
 
 The main innovation I introduce to the original work of GPS is the use of a prime _p_ == 1 (mod 8) and a curve j_0 over F_p for which the endomorphism ring O_0 = End(j_0) resides in the third row of the table of [Petit and Lauter](https://eprint.iacr.org/2017/962.pdf), Prop. 1. For such j_0, the specialized modular polynomials \Phi\__l_\_i(X, j_0) lack repeated roots over F\__p_^2; as such, the method of Elkies serves to efficiently factor E(j_0)'s division polynomials \psi\__l_\_i(X). I first re-situate into a _preprocessing_ step the construction of all torsion bases E_0[_l_\_i], so that, during walking, only random combinations of these (pre-calculated) bases must be generated; the approach of Elkies (with improvements due to Müller) efficiently yields these torsion bases, as the order-(_l_\_i - 1) / 2 factors of \psi\__l_\_i(X) it produces correspond exactly to order-_l_\_i subgroups of E[_l_\_i] (and hence to candidate basis elements).
