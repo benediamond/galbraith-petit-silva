@@ -1,5 +1,5 @@
 CXX      := g++
-CXXFLAGS := -std="c++11" # -pedantic-errors -Wall -Wextra -Werror
+CXXFLAGS := -std="c++11"
 LDFLAGS  := -lstdc++ -lm -lLiDIA -lgmp -lcryptopp
 BUILD    := ./build
 LIB      := ./include
@@ -22,7 +22,7 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LDFLAGS) -o $(APP_DIR)/$(TARGET) $(OBJECTS)
 
-$(OBJ_DIR)/main.o: $(SRC)/main.cc $(addprefix $(LIB)/,gps.h walker.h step.h order.h basis.h extension.h)
+$(OBJ_DIR)/main.o: $(addprefix $(LIB)/,gps.h walker.h step.h order.h basis.h extension.h)
 $(OBJ_DIR)/gps.o: $(addprefix $(LIB)/,gps.h walker.h step.h order.h basis.h extension.h)
 $(OBJ_DIR)/walker.o: $(addprefix $(LIB)/,walker.h modular.h step.h order.h basis.h extension.h)
 $(OBJ_DIR)/order.o: $(addprefix $(LIB)/,order.h step.h basis.h extension.h)
